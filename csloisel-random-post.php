@@ -28,7 +28,8 @@ class CSLoisel_Random_Post {
 			$query->set( 'orderby', 'rand' );
 			$query->set( 'post_type', 'post' );
 			$query->set( 'posts_per_page', 1 );
-			$query->set( 'exclude', self::get_seen_posts() );
+			$query->set( 'post__not_in', self::get_seen_posts() );
+			$query->set( 'post_status', 'publish' );
 		}
 	}
 
