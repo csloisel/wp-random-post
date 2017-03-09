@@ -19,6 +19,9 @@ class CSLoisel_Random_Post {
 
 	public static function query_random_post( $query ) {
 		if ( $query->is_main_query() ) {
+			$query->is_single = true;
+			$query->is_singular = true;
+			$query->is_home = false;
 			$query->set( 'orderby', 'rand' );
 			$query->set( 'post_type', 'post' );
 			$query->set( 'posts_per_page', 1 );
