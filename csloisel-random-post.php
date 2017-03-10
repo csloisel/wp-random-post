@@ -8,29 +8,38 @@ class CSLoisel_Random_Post {
 	const COOKIE_KEY = 'CSLSeenRandomPosts';
 
 	public static function init() {
-		if ( self::is_random_post_page() ) {
-			add_action( 'pre_get_posts', array( __CLASS__, 'query_random_post' ) );
-			add_action( 'wp', array( __CLASS__, 'store_seen_post' ) );
-		}
+		add_filter( 'theme_page_templates', function( $templates ) {
+			$templates['random-post.php'] = 'Random Post';
+			return $templates;
+		} );
+
+		add_filter( 'wp', function( $template ) {
+			$template_slug = get_page_template_slug();
+			if ( 'random-post.php' === $template_slug ) {
+				self::setup_random_post();
+			}
+		} );
 	}
 
-	public static function is_random_post_page() {
-		$request_uri = $_SERVER['REQUEST_URI'];
-		$request_uri = str_replace( '/', '', $request_uri );
-		return 'random' === $request_uri;
+	public static function get_random_post() {
+		$args = array(
+			'orderby' => 'rand',
+			'post_type' => 'post',
+			'posts_per_page' => 1,
+			'post__not_in' => self::get_seen_posts(),
+			'post_status' => 'publish'
+		);
+		$query = new WP_Query( $args );
+		return $query->posts[0];
 	}
 
-	public static function query_random_post( $query ) {
-		if ( $query->is_main_query() ) {
-			$query->is_single = true;
-			$query->is_singular = true;
-			$query->is_home = false;
-			$query->set( 'orderby', 'rand' );
-			$query->set( 'post_type', 'post' );
-			$query->set( 'posts_per_page', 1 );
-			$query->set( 'post__not_in', self::get_seen_posts() );
-			$query->set( 'post_status', 'publish' );
-		}
+	public static function setup_random_post() {
+		$random_post = self::get_random_post();
+		$args = array(
+			'p' => $random_post->ID
+		);
+		query_posts( $args );
+		$GLOBALS['post'] = $random_post;
 	}
 
 	public static function get_seen_posts() {
